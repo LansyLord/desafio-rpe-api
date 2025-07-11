@@ -2,11 +2,13 @@ package com.rpe.desafio.rpe_api.service;
 
 
 import com.rpe.desafio.rpe_api.exception.FaturaJaPagaException;
+import com.rpe.desafio.rpe_api.exception.FaturaNaoEncontradaException;
 import com.rpe.desafio.rpe_api.model.Cliente;
 import com.rpe.desafio.rpe_api.model.Fatura;
 import com.rpe.desafio.rpe_api.repository.ClienteRepository;
 import com.rpe.desafio.rpe_api.repository.FaturaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,32 +18,35 @@ import java.util.Optional;
 public class FaturaService {
 
     private final FaturaRepository faturaRepository;
-    private final ClienteRepository clienteRepository;
+    private final ClienteService clienteService;
 
-    public FaturaService(FaturaRepository faturaRepository, ClienteRepository clienteRepository) {
+    public FaturaService(FaturaRepository faturaRepository, ClienteService clienteService) {
         this.faturaRepository = faturaRepository;
-        this.clienteRepository = clienteRepository;
+        this.clienteService = clienteService;
     }
 
     public List<Fatura> listarPorCliente(Long clienteId) {
         return faturaRepository.findByClienteId(clienteId);
     }
 
-    public Optional<Fatura> buscarPorId(Long id) {
-        return faturaRepository.findById(id);
+    public Fatura buscarPorId(Long id){
+        return faturaRepository.findById(id)
+                .orElseThrow(() -> new FaturaNaoEncontradaException(id));
+    }
+
+    public void marcarComoAtrasada(Long id){
+        Fatura fatura = buscarPorId(id);
+        if(!fatura.getStatus().equals(Fatura.Status.A))
+            fatura.setStatus(Fatura.Status.A);
+
+        faturaRepository.save(fatura);
     }
 
     public Fatura registrarPagamento(Long faturaId) {
-        System.out.println("Buscando Fatura...");
-        Fatura fatura = faturaRepository.findById(faturaId)
-                .orElseThrow(() -> new RuntimeException("Fatura não encontrada"));
-        System.out.println("Fatura encontrada!");
-
+        Fatura fatura = buscarPorId(faturaId);
 
         if(fatura.getStatus().equals(Fatura.Status.P))
             throw new FaturaJaPagaException(fatura.getId());
-        System.out.println("Fatura não está paga!");
-
 
         fatura.setDataPagamento(LocalDate.now());
         fatura.setStatus(Fatura.Status.P);
@@ -53,15 +58,18 @@ public class FaturaService {
         return faturaRepository.findByStatus(Fatura.Status.A);
     }
 
-    public void processarBloqueios() {
-        List<Fatura> atrasadas = listarFaturasAtrasadas();
-        for (Fatura f : atrasadas) {
-            Cliente cliente = f.getCliente();
-            if (cliente.getStatusBloqueio() == Cliente.StatusBloqueio.A) {
-                cliente.setStatusBloqueio(Cliente.StatusBloqueio.B);
-                cliente.setLimiteCredito(0.0);
-                clienteRepository.save(cliente);
-            }
+    public List<Fatura> listarFaturasVencidas() {
+        LocalDate limite = LocalDate.now().minusDays(3);
+        return faturaRepository.findVencidasNaoPagas(limite);
+    }
+
+    @Transactional
+    public void processarFaturasVencidas() {
+        List<Fatura> vencidas = listarFaturasVencidas();
+
+        for (Fatura fatura : vencidas) {
+            marcarComoAtrasada(fatura.getId());
+            clienteService.marcarComoBloqueado(fatura.getCliente().getId());
         }
     }
 }
