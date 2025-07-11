@@ -1,6 +1,7 @@
 package com.rpe.desafio.rpe_api.service;
 
 
+import com.rpe.desafio.rpe_api.exception.ClienteNaoEncontradoException;
 import com.rpe.desafio.rpe_api.model.Cliente;
 import com.rpe.desafio.rpe_api.repository.ClienteRepository;
 import org.springframework.stereotype.Service;
@@ -25,31 +26,35 @@ public class ClienteService {
         return clienteRepository.save(cliente);
     }
 
-    public Optional<Cliente> buscarPorId(Long id) {
-        return clienteRepository.findById(id);
+    public Cliente buscarPorId(Long id) {
+        return clienteRepository.findById(id).orElseThrow(() -> new ClienteNaoEncontradoException(id));
     }
 
     public Cliente atualizar(Long id, Cliente clienteAtualizado) {
-        return clienteRepository.findById(id).map(c -> {
-            c.setNome(clienteAtualizado.getNome());
-            c.setCpf(clienteAtualizado.getCpf());
-            c.setDataNascimento(clienteAtualizado.getDataNascimento());
-            c.setStatusBloqueio(clienteAtualizado.getStatusBloqueio());
-            c.setLimiteCredito(clienteAtualizado.getLimiteCredito());
-            return clienteRepository.save(c);
-        }).orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+        Cliente clienteExistente = buscarPorId(id);
+
+        clienteExistente.setNome(clienteAtualizado.getNome());
+        clienteExistente.setCpf(clienteAtualizado.getCpf());
+        clienteExistente.setDataNascimento(clienteAtualizado.getDataNascimento());
+        clienteExistente.setStatusBloqueio(clienteAtualizado.getStatusBloqueio());
+        clienteExistente.setLimiteCredito(clienteAtualizado.getLimiteCredito());
+
+        return clienteRepository.save(clienteExistente);
     }
 
     public List<Cliente> listarBloqueados() {
         return clienteRepository.findByStatusBloqueio(Cliente.StatusBloqueio.B);
     }
 
-    public void atualizarLimiteClientesBloqueadosParaZero() {
-        List<Cliente> bloqueados = listarBloqueados();
-        for (Cliente c : bloqueados) {
-            c.setLimiteCredito(0.0);
-        }
-        clienteRepository.saveAll(bloqueados);
+    public void marcarComoBloqueado(Long id){
+        Cliente cliente = buscarPorId(id);
+        if(!cliente.getStatusBloqueio().equals(Cliente.StatusBloqueio.B))
+            cliente.setStatusBloqueio(Cliente.StatusBloqueio.B);
+
+        if(cliente.getLimiteCredito() >= 0)
+            cliente.setLimiteCredito(0.0);
+
+        clienteRepository.save(cliente);
     }
 
 }

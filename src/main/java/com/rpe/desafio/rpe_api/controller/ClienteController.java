@@ -24,39 +24,32 @@ public class ClienteController {
 
     @Operation(summary = "Listar todos os clientes")
     @GetMapping
-    public List<Cliente> listarTodos() {
-        return clienteService.listarTodos();
+    public ResponseEntity<List<Cliente>> listarTodos() {
+        return ResponseEntity.ok(clienteService.listarTodos());
     }
 
     @Operation(summary = "Cadastrar novo cliente")
     @PostMapping
-    public Cliente salvar(@RequestBody Cliente cliente) {
-        return clienteService.salvar(cliente);
+    public ResponseEntity<Cliente> salvar(@RequestBody Cliente cliente) {
+        return ResponseEntity.ok(clienteService.salvar(cliente));
     }
 
     @Operation(summary = "Buscar cliente por ID")
     @GetMapping("/{id}")
     public ResponseEntity<Cliente> buscarPorId(@PathVariable Long id) {
-        return clienteService.buscarPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(clienteService.buscarPorId(id));
     }
 
     @Operation(summary = "Atualizar cliente existente")
     @PutMapping("/{id}")
     public ResponseEntity<Cliente> atualizar(@PathVariable Long id, @RequestBody Cliente cliente) {
-        try {
-            Cliente atualizado = clienteService.atualizar(id, cliente);
-            return ResponseEntity.ok(atualizado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(clienteService.atualizar(id, cliente));
     }
 
     @Operation(summary = "Listar clientes bloqueados")
     @GetMapping("/bloqueados")
-    public List<Cliente> listarBloqueados() {
-        return clienteService.listarBloqueados();
+    public ResponseEntity<List<Cliente>> listarBloqueados() {
+        return ResponseEntity.ok(clienteService.listarBloqueados());
     }
 }
 
