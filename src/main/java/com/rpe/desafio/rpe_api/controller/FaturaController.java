@@ -29,25 +29,13 @@ public class FaturaController {
     @Operation(summary = "Registrar pagamento de uma fatura")
     @PutMapping("/{id}/pagamento")
     public ResponseEntity<Fatura> registrarPagamento(@PathVariable Long id) {
-        try {
-            Fatura fatura = faturaService.registrarPagamento(id);
-            return ResponseEntity.ok(fatura);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        Fatura fatura = faturaService.registrarPagamento(id);
+        return ResponseEntity.ok(fatura);
     }
 
     @Operation(summary = "Listar faturas em atraso")
     @GetMapping("/atrasadas")
     public List<Fatura> listarAtrasadas() {
         return faturaService.listarFaturasAtrasadas();
-    }
-
-    // (Opcional) endpoint para processar bloqueios
-    @Operation(summary = "Processar bloqueio de clientes com faturas em atraso")
-    @PostMapping("/processar-bloqueios")
-    public ResponseEntity<Void> processarBloqueios() {
-        faturaService.processarBloqueios();
-        return ResponseEntity.ok().build();
     }
 }
