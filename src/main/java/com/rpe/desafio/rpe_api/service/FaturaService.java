@@ -1,6 +1,7 @@
 package com.rpe.desafio.rpe_api.service;
 
 
+import com.rpe.desafio.rpe_api.exception.FaturaJaPagaException;
 import com.rpe.desafio.rpe_api.model.Cliente;
 import com.rpe.desafio.rpe_api.model.Fatura;
 import com.rpe.desafio.rpe_api.repository.ClienteRepository;
@@ -31,23 +32,21 @@ public class FaturaService {
     }
 
     public Fatura registrarPagamento(Long faturaId) {
+        System.out.println("Buscando Fatura...");
         Fatura fatura = faturaRepository.findById(faturaId)
                 .orElseThrow(() -> new RuntimeException("Fatura não encontrada"));
+        System.out.println("Fatura encontrada!");
+
+
+        if(fatura.getStatus().equals(Fatura.Status.P))
+            throw new FaturaJaPagaException(fatura.getId());
+        System.out.println("Fatura não está paga!");
+
 
         fatura.setDataPagamento(LocalDate.now());
         fatura.setStatus(Fatura.Status.P);
 
-        Fatura atualizada = faturaRepository.save(fatura);
-
-//        // Regra de negócio: atualizar cliente se necessário
-//        Cliente cliente = fatura.getCliente();
-//        if (cliente.getStatusBloqueio() == Cliente.StatusBloqueio.B) {
-//            cliente.setStatusBloqueio(Cliente.StatusBloqueio.A);
-//            cliente.setLimiteCredito(3000.0); // Defina o valor padrão se necessário
-//            clienteRepository.save(cliente);
-//        }
-
-        return atualizada;
+        return faturaRepository.save(fatura);
     }
 
     public List<Fatura> listarFaturasAtrasadas() {

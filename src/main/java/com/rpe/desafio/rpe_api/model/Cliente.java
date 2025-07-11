@@ -25,9 +25,6 @@ public class Cliente {
 
     private Double limiteCredito;
 
-    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)
-    private List<Fatura> faturas;
-
     public enum StatusBloqueio {
         A, // Ativo
         B  // Bloqueado
@@ -40,7 +37,6 @@ public class Cliente {
         this.dataNascimento = dataNascimento;
         this.statusBloqueio = statusBloqueio;
         this.limiteCredito = limiteCredito;
-        this.faturas = faturas;
     }
 
     public Cliente() {
@@ -92,13 +88,5 @@ public class Cliente {
 
     public void setLimiteCredito(Double limiteCredito) {
         this.limiteCredito = limiteCredito;
-    }
-
-    public List<Fatura> getFaturas() {
-        return faturas;
-    }
-
-    public void setFaturas(List<Fatura> faturas) {
-        this.faturas = faturas;
     }
 }
