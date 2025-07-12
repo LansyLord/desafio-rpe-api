@@ -19,7 +19,7 @@ public class FaturaScheduler {
         this.faturaService = faturaService;
     }
 
-    // Roda todos os dias às 2h da manhã
+    // Roda todos os dias às 2h da manhã em produção
     //@Scheduled(cron = "0 0 2 * * *")
     @Scheduled(cron = "0 * * * * *") // Roda a cada 1 minuto para teste
     @Transactional
