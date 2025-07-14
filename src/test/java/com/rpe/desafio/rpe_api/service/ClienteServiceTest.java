@@ -1,8 +1,7 @@
-package com.rpe.desafio.rpe_api;
+package com.rpe.desafio.rpe_api.service;
 import com.rpe.desafio.rpe_api.exception.ClienteNaoEncontradoException;
 import com.rpe.desafio.rpe_api.model.Cliente;
 import com.rpe.desafio.rpe_api.repository.ClienteRepository;
-import com.rpe.desafio.rpe_api.service.ClienteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
