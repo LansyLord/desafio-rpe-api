@@ -10,7 +10,7 @@ public record FaturaDTO(
         Long id,
         Long clienteId,
         BigDecimal valor,
-        BigDecimal valorComJuros,
+        BigDecimal valorJuros,
         LocalDate dataVencimento,
         Fatura.Status status,
         LocalDate dataPagamento

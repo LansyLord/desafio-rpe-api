@@ -4,9 +4,7 @@ package com.rpe.desafio.rpe_api.service;
 import com.rpe.desafio.rpe_api.dto.FaturaDTO;
 import com.rpe.desafio.rpe_api.exception.FaturaJaPagaException;
 import com.rpe.desafio.rpe_api.exception.FaturaNaoEncontradaException;
-import com.rpe.desafio.rpe_api.model.Cliente;
 import com.rpe.desafio.rpe_api.model.Fatura;
-import com.rpe.desafio.rpe_api.repository.ClienteRepository;
 import com.rpe.desafio.rpe_api.repository.FaturaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +14,6 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class FaturaService {
@@ -43,13 +40,13 @@ public class FaturaService {
                 .orElseThrow(() -> new FaturaNaoEncontradaException(id));
     }
 
+    @Transactional
     public FaturaDTO registrarPagamento(Long faturaId) {
         Fatura fatura = buscarPorId(faturaId);
 
-        if(fatura.getStatus().equals(Fatura.Status.P))
+        if (fatura.getStatus().equals(Fatura.Status.P)) {
             throw new FaturaJaPagaException(fatura.getId());
-
-        BigDecimal valorFinalPago = calcularValorComJuros(fatura);
+        }
 
         fatura.setStatus(Fatura.Status.P);
         fatura.setDataPagamento(LocalDate.now());
@@ -58,15 +55,7 @@ public class FaturaService {
 
         verificarDesbloqueioDeCliente(faturaPaga.getCliente().getId());
 
-        return new FaturaDTO(
-                faturaPaga.getId(),
-                faturaPaga.getCliente().getId(),
-                faturaPaga.getValor(),
-                valorFinalPago,
-                faturaPaga.getDataVencimento(),
-                faturaPaga.getStatus(),
-                faturaPaga.getDataPagamento()
-        );
+        return converterParaDTO(faturaPaga);
     }
 
     public List<FaturaDTO> listarFaturasAtrasadas() {
@@ -97,33 +86,41 @@ public class FaturaService {
 
     }
 
-    private BigDecimal calcularValorComJuros(Fatura fatura) {
-        if (fatura.getStatus() != Fatura.Status.A) {
-            return fatura.getValor();
+    private BigDecimal calcularJuros(Fatura fatura) {
+        if (fatura.getStatus() != Fatura.Status.A && fatura.getStatus() != Fatura.Status.P) {
+            return BigDecimal.ZERO;
         }
 
-        long diasAtraso = ChronoUnit.DAYS.between(fatura.getDataVencimento(), LocalDate.now());
+        LocalDate dataFinal;
+        if (fatura.getStatus() == Fatura.Status.P) {
+            if (fatura.getDataPagamento() == null) {
+                return BigDecimal.ZERO;
+            }
+            dataFinal = fatura.getDataPagamento();
+        } else {
+            dataFinal = LocalDate.now();
+        }
+
+        long diasAtraso = ChronoUnit.DAYS.between(fatura.getDataVencimento(), dataFinal);
 
         if (diasAtraso <= 0) {
-            return fatura.getValor();
+            return BigDecimal.ZERO;
         }
 
-        // Cálculo de juros simples: J = C * i * t
-        BigDecimal juros = fatura.getValor()
+        return fatura.getValor()
                 .multiply(TAXA_JUROS_DIARIA)
-                .multiply(new BigDecimal(diasAtraso));
-
-        return fatura.getValor().add(juros).setScale(2, RoundingMode.HALF_UP);
+                .multiply(new BigDecimal(diasAtraso))
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     private FaturaDTO converterParaDTO(Fatura fatura) {
-        BigDecimal valorComJuros = calcularValorComJuros(fatura);
+        BigDecimal juros = calcularJuros(fatura);
 
         return new FaturaDTO(
                 fatura.getId(),
                 fatura.getCliente().getId(),
                 fatura.getValor(),
-                valorComJuros,
+                juros,
                 fatura.getDataVencimento(),
                 fatura.getStatus(),
                 fatura.getDataPagamento()
