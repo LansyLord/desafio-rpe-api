@@ -10,6 +10,6 @@ INSERT INTO cliente (id, nome, cpf, data_nascimento, status_bloqueio, limite_cre
 INSERT INTO fatura (id, cliente_id, data_vencimento, data_pagamento, valor, status) VALUES
 (1, 1, '2025-07-01', '2025-07-05', 1000.00, 'P'), -- Paga
 (2, 2, '2025-07-05', NULL, 800.00, 'A'),          -- Atrasada e cliente bloqueado
-(3, 3, '2025-07-09', NULL, 600.00, 'B'),          -- Aberta
+(3, 3, '2025-09-09', NULL, 600.00, 'B'),          -- Aberta
 (4, 4, '2025-07-01', NULL, 500.00, 'A'),          -- Atrasada e cliente bloqueado
-(5, 5, '2025-07-12', NULL, 700.00, 'B');          -- Aberta futura
+(5, 5, '2025-09-12', NULL, 700.00, 'B');          -- Aberta futura
