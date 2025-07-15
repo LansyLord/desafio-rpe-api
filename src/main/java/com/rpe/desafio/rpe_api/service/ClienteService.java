@@ -48,11 +48,19 @@ public class ClienteService {
 
     public void marcarComoBloqueado(Long id){
         Cliente cliente = buscarPorId(id);
-        if(!cliente.getStatusBloqueio().equals(Cliente.StatusBloqueio.B))
+        if(cliente.getStatusBloqueio().equals(Cliente.StatusBloqueio.A))
             cliente.setStatusBloqueio(Cliente.StatusBloqueio.B);
 
         if(cliente.getLimiteCredito() >= 0)
             cliente.setLimiteCredito(0.0);
+
+        clienteRepository.save(cliente);
+    }
+
+    public void marcarComoDesbloqueado(Long id){
+        Cliente cliente = buscarPorId(id);
+        if(cliente.getStatusBloqueio().equals(Cliente.StatusBloqueio.B))
+            cliente.setStatusBloqueio(Cliente.StatusBloqueio.A);
 
         clienteRepository.save(cliente);
     }

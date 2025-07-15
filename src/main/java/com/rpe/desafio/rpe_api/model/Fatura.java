@@ -3,6 +3,7 @@ package com.rpe.desafio.rpe_api.model;
 import jakarta.persistence.*;
 
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -21,7 +22,7 @@ public class Fatura {
 
     private LocalDate dataPagamento;
 
-    private Double valor;
+    private BigDecimal valor;
 
     @Enumerated(EnumType.STRING)
     private Status status = Status.B;
@@ -32,7 +33,7 @@ public class Fatura {
         B  // Aberta
     }
 
-    public Fatura(Long id, Cliente cliente, LocalDate dataVencimento, LocalDate dataPagamento, Double valor, Status status) {
+    public Fatura(Long id, Cliente cliente, LocalDate dataVencimento, LocalDate dataPagamento, BigDecimal valor, Status status) {
         this.id = id;
         this.cliente = cliente;
         this.dataVencimento = dataVencimento;
@@ -76,11 +77,11 @@ public class Fatura {
         this.dataPagamento = dataPagamento;
     }
 
-    public Double getValor() {
+    public BigDecimal getValor() {
         return valor;
     }
 
-    public void setValor(Double valor) {
+    public void setValor(BigDecimal valor) {
         this.valor = valor;
     }
 

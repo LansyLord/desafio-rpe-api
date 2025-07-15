@@ -1,6 +1,7 @@
 package com.rpe.desafio.rpe_api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rpe.desafio.rpe_api.dto.FaturaDTO; // Importe o DTO
 import com.rpe.desafio.rpe_api.model.Cliente;
 import com.rpe.desafio.rpe_api.model.Fatura;
 import com.rpe.desafio.rpe_api.service.FaturaService;
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -43,45 +45,37 @@ class FaturaControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private Fatura faturaAtrasada;
-    private Fatura faturaAtrasada2;
-    private Fatura faturaPaga;
-    private Cliente cliente;
+    private FaturaDTO faturaAtrasadaDTO1;
+    private FaturaDTO faturaAtrasadaDTO2;
+    private FaturaDTO faturaPagaDTO;
+    private FaturaDTO faturaPagaRetornadaDTO;
 
     @BeforeEach
     void setUp() {
-        cliente = new Cliente();
+        Cliente cliente = new Cliente();
         cliente.setId(1L);
         cliente.setNome("Cliente Teste");
 
-        faturaAtrasada = new Fatura();
-        faturaAtrasada.setId(101L);
-        faturaAtrasada.setCliente(cliente);
-        faturaAtrasada.setValor(150.0);
-        faturaAtrasada.setDataVencimento(LocalDate.now().minusDays(10));
-        faturaAtrasada.setStatus(Fatura.Status.A);
 
-        faturaAtrasada2 = new Fatura();
-        faturaAtrasada2.setId(102L);
-        faturaAtrasada2.setCliente(cliente);
-        faturaAtrasada2.setValor(320.0);
-        faturaAtrasada2.setDataVencimento(LocalDate.now().minusDays(15));
-        faturaAtrasada2.setStatus(Fatura.Status.A);
+        faturaAtrasadaDTO1 = new FaturaDTO(101L, 1L, new BigDecimal("150.00"), new BigDecimal("151.50"),
+                LocalDate.now().minusDays(10), Fatura.Status.A, null);
 
-        faturaPaga = new Fatura();
-        faturaPaga.setId(103L);
-        faturaPaga.setCliente(cliente);
-        faturaPaga.setValor(200.0);
-        faturaPaga.setDataVencimento(LocalDate.now().minusMonths(1));
-        faturaPaga.setStatus(Fatura.Status.P);
-        faturaPaga.setDataPagamento(LocalDate.now().minusMonths(1).plusDays(5));
+        faturaAtrasadaDTO2 = new FaturaDTO(102L, 1L, new BigDecimal("320.00"), new BigDecimal("324.80"),
+                LocalDate.now().minusDays(15), Fatura.Status.A, null);
+
+        faturaPagaDTO = new FaturaDTO(103L, 1L, new BigDecimal("200.00"), new BigDecimal("200.00"),
+                LocalDate.now().minusMonths(1), Fatura.Status.P, LocalDate.now().minusMonths(1).plusDays(5));
+
+        faturaPagaRetornadaDTO = new FaturaDTO(101L, 1L, new BigDecimal("150.00"), new BigDecimal("151.50"),
+                LocalDate.now().minusDays(10), Fatura.Status.P, LocalDate.now());
     }
 
     @Test
     void listarPorCliente_deveRetornarListaDeFaturasEStatusOK() throws Exception {
         Long clienteId = 1L;
-        List<Fatura> faturasDoCliente = List.of(faturaAtrasada, faturaAtrasada2,faturaPaga);
-        when(faturaService.listarPorCliente(clienteId)).thenReturn(faturasDoCliente);
+
+        List<FaturaDTO> faturasDtoDoCliente = List.of(faturaAtrasadaDTO1, faturaAtrasadaDTO2, faturaPagaDTO);
+        when(faturaService.listarPorCliente(clienteId)).thenReturn(faturasDtoDoCliente);
 
         mockMvc.perform(get("/faturas/{clienteId}", clienteId))
                 .andExpect(status().isOk())
@@ -94,22 +88,21 @@ class FaturaControllerTest {
     @Test
     void registrarPagamento_deveRetornarFaturaPagaEStatusOK() throws Exception {
         Long faturaIdParaPagar = 101L;
-        faturaAtrasada.setStatus(Fatura.Status.P);
-        faturaAtrasada.setDataPagamento(LocalDate.now());
 
-        when(faturaService.registrarPagamento(faturaIdParaPagar)).thenReturn(faturaAtrasada);
+        when(faturaService.registrarPagamento(faturaIdParaPagar)).thenReturn(faturaPagaRetornadaDTO);
 
         mockMvc.perform(put("/faturas/{id}/pagamento", faturaIdParaPagar)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(faturaIdParaPagar))
-                .andExpect(jsonPath("$.status").value("P"));
+                .andExpect(jsonPath("$.status").value("P")); // Validação permanece a mesma
     }
 
     @Test
     void listarAtrasadas_deveRetornarListaDeFaturasAtrasadasEStatusOK() throws Exception {
-        List<Fatura> faturasAtrasadas = List.of(faturaAtrasada, faturaAtrasada2);
-        when(faturaService.listarFaturasAtrasadas()).thenReturn(faturasAtrasadas);
+        List<FaturaDTO> faturasAtrasadasDTO = List.of(faturaAtrasadaDTO1, faturaAtrasadaDTO2);
+        when(faturaService.listarFaturasAtrasadas()).thenReturn(faturasAtrasadasDTO);
+
         mockMvc.perform(get("/faturas/atrasadas"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(2))
