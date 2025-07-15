@@ -17,4 +17,6 @@ public interface FaturaRepository extends JpaRepository<Fatura, Long> {
 
     @Query("SELECT f FROM Fatura f WHERE f.dataVencimento <= :limiteData AND f.status = 'B'")
     List<Fatura> findVencidasNaoPagas(@Param("limiteData") LocalDate limiteData);
+
+    Integer countByClienteIdAndStatus(Long clienteId, Fatura.Status status);
 }

@@ -1,5 +1,6 @@
 package com.rpe.desafio.rpe_api.controller;
 
+import com.rpe.desafio.rpe_api.dto.FaturaDTO;
 import com.rpe.desafio.rpe_api.model.Fatura;
 import com.rpe.desafio.rpe_api.service.FaturaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,20 +23,20 @@ public class FaturaController {
 
     @Operation(summary = "Listar faturas de um cliente")
     @GetMapping("/{clienteId}")
-    public List<Fatura> listarPorCliente(@PathVariable Long clienteId) {
+    public List<FaturaDTO> listarPorCliente(@PathVariable Long clienteId) {
         return faturaService.listarPorCliente(clienteId);
     }
 
     @Operation(summary = "Registrar pagamento de uma fatura")
     @PutMapping("/{id}/pagamento")
-    public ResponseEntity<Fatura> registrarPagamento(@PathVariable Long id) {
-        Fatura fatura = faturaService.registrarPagamento(id);
+    public ResponseEntity<FaturaDTO> registrarPagamento(@PathVariable Long id) {
+        FaturaDTO fatura = faturaService.registrarPagamento(id);
         return ResponseEntity.ok(fatura);
     }
 
     @Operation(summary = "Listar faturas em atraso")
     @GetMapping("/atrasadas")
-    public List<Fatura> listarAtrasadas() {
+    public List<FaturaDTO> listarAtrasadas() {
         return faturaService.listarFaturasAtrasadas();
     }
 }
